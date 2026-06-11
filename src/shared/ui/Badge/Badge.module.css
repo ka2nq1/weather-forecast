@@ -1,0 +1,30 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--spacing-sm);
+  font-family: var(--font-ui);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  border-radius: 2px;
+  border: 1px solid var(--color-border);
+}
+
+.default {
+  color: var(--color-text-muted);
+  background-color: var(--color-surface);
+}
+
+.warm {
+  color: var(--color-accent-warm);
+  background-color: rgb(255 138 80 / 12%);
+  border-color: rgb(255 138 80 / 30%);
+}
+
+.cold {
+  color: var(--color-accent-cold);
+  background-color: rgb(79 195 247 / 12%);
+  border-color: rgb(79 195 247 / 30%);
+}
