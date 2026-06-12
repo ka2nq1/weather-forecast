@@ -65,7 +65,7 @@ export function ForecastBlock({ forecast }: ForecastBlockProps) {
       <p className={styles.srOnly}>{trendSummary}</p>
       <div className={styles.forecastLayout} style={layoutStyle}>
         <div className={styles.graph} aria-hidden="true">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={80}>
             <LineChart
               data={chartData}
               margin={{ top: 8, right: 0, bottom: 0, left: 0 }}
