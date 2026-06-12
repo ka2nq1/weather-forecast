@@ -1,6 +1,6 @@
 import { isAxiosError } from 'axios'
 import { httpClient } from '@/shared/api/httpClient'
-import { CityNotFoundError } from './errors'
+import { CityNotFoundError, InvalidApiKeyError } from './errors'
 import type {
   CurrentWeather,
   CurrentWeatherResponse,
@@ -52,8 +52,14 @@ function toGenericError(error: unknown, fallbackMessage: string): Error {
 }
 
 function handleApiError(error: unknown, city: string, fallbackMessage: string): never {
-  if (isAxiosError(error) && error.response?.status === 404) {
-    throw new CityNotFoundError(city)
+  if (isAxiosError(error)) {
+    if (error.response?.status === 401) {
+      throw new InvalidApiKeyError()
+    }
+
+    if (error.response?.status === 404) {
+      throw new CityNotFoundError(city)
+    }
   }
 
   throw toGenericError(error, fallbackMessage)

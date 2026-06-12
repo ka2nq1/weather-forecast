@@ -1,11 +1,10 @@
 import { QueryProvider } from '@/app/providers/QueryProvider'
+import { WeatherPage } from '@/pages/WeatherPage'
 
 function App() {
   return (
     <QueryProvider>
-      <main>
-        <h1>Weather Forecast</h1>
-      </main>
+      <WeatherPage />
     </QueryProvider>
   )
 }

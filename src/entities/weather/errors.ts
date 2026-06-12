@@ -4,3 +4,10 @@ export class CityNotFoundError extends Error {
     this.name = 'CityNotFoundError'
   }
 }
+
+export class InvalidApiKeyError extends Error {
+  constructor() {
+    super('Invalid API key')
+    this.name = 'InvalidApiKeyError'
+  }
+}
