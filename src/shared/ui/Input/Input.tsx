@@ -7,6 +7,7 @@ type InputProps = {
   onChange: (event: ChangeEvent<HTMLInputElement>) => void
   placeholder?: string
   isLoading?: boolean
+  id?: string
   className?: string
 }
 
@@ -15,11 +16,13 @@ export function Input({
   onChange,
   placeholder,
   isLoading = false,
+  id,
   className,
 }: InputProps) {
   return (
     <div className={[styles.wrapper, className].filter(Boolean).join(' ')}>
       <input
+        id={id}
         className={styles.input}
         type="text"
         value={value}
