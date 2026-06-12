@@ -1,5 +1,5 @@
 import { useFavoritesStore } from '@/features/toggle-favorite'
-import { useRef, type KeyboardEvent } from 'react'
+import { useEffect, useRef, type KeyboardEvent } from 'react'
 import styles from './FavoritesPanel.module.css'
 
 type FavoritesPanelProps = {
@@ -14,6 +14,10 @@ export function FavoritesPanel({
   const favorites = useFavoritesStore((state) => state.favorites)
   const removeFavorite = useFavoritesStore((state) => state.removeFavorite)
   const cityButtonRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  useEffect(() => {
+    cityButtonRefs.current = cityButtonRefs.current.slice(0, favorites.length)
+  }, [favorites])
 
   const handleItemKeyDown = (
     event: KeyboardEvent<HTMLLIElement>,
@@ -51,7 +55,8 @@ export function FavoritesPanel({
       <h3 className={styles.title}>Favorites</h3>
       <ul className={styles.list}>
         {favorites.map((city, index) => {
-          const isActive = city === activeCity
+          const isActive =
+            city.trim().toLowerCase() === activeCity.trim().toLowerCase()
 
           return (
             <li

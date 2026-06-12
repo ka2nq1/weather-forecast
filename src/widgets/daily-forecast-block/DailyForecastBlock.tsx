@@ -1,27 +1,36 @@
 import type { DailyForecastItem } from '@/entities/weather/types'
+import { WeatherIcon } from '@/shared/ui/WeatherIcon/WeatherIcon'
 import styles from './DailyForecastBlock.module.css'
 
 type DailyForecastBlockProps = {
   forecast: DailyForecastItem[]
+  className?: string
 }
 
 function formatTemperature(temp: number): string {
   return `${Math.round(temp)}°`
 }
 
-export function DailyForecastBlock({ forecast }: DailyForecastBlockProps) {
+export function DailyForecastBlock({
+  forecast,
+  className,
+}: DailyForecastBlockProps) {
   return (
-    <section className={styles.block} aria-label="5-day forecast">
+    <section
+      className={[styles.block, styles.dailyBlock, className]
+        .filter(Boolean)
+        .join(' ')}
+      aria-label="5-day forecast"
+    >
       <h3 className={styles.title}>5-day outlook</h3>
 
       <ul className={styles.list}>
         {forecast.map((day) => (
           <li key={day.dt} className={styles.item}>
             <span className={styles.label}>{day.label}</span>
-            <img
+            <WeatherIcon
               className={styles.icon}
-              src={`https://openweathermap.org/img/wn/${day.icon}@2x.png`}
-              alt=""
+              icon={day.icon}
               width={36}
               height={36}
             />

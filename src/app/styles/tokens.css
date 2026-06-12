@@ -22,4 +22,8 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+
+  /* Layout */
+  --weather-block-min-height: 225px;
+  --weather-daily-block-min-height: 174px;
 }

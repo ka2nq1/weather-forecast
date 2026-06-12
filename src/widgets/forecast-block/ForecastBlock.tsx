@@ -1,4 +1,5 @@
 import type { ForecastItem } from '@/entities/weather/types'
+import { WeatherIcon } from '@/shared/ui/WeatherIcon/WeatherIcon'
 import type { CSSProperties } from 'react'
 import {
   Line,
@@ -12,8 +13,6 @@ import styles from './ForecastBlock.module.css'
 type ForecastBlockProps = {
   forecast: ForecastItem[]
 }
-
-const ACCENT_COLD = '#4fc3f7'
 
 type ChartPoint = {
   x: number
@@ -39,9 +38,22 @@ function buildChartData(forecast: ForecastItem[]): ChartPoint[] {
   }))
 }
 
+function buildTrendSummary(forecast: ForecastItem[]): string {
+  if (forecast.length === 0) {
+    return ''
+  }
+
+  const temps = forecast.map((item) => Math.round(item.temp))
+  const min = Math.min(...temps)
+  const max = Math.max(...temps)
+
+  return `Temperature trend from ${formatTemperature(temps[0])} to ${formatTemperature(temps[temps.length - 1])}, ranging from ${min}° to ${max}° over the next 24 hours.`
+}
+
 export function ForecastBlock({ forecast }: ForecastBlockProps) {
   const chartData = buildChartData(forecast)
   const columnCount = forecast.length
+  const trendSummary = buildTrendSummary(forecast)
 
   const layoutStyle = {
     '--forecast-cols': columnCount,
@@ -50,6 +62,7 @@ export function ForecastBlock({ forecast }: ForecastBlockProps) {
   return (
     <section className={styles.block} aria-label="24-hour forecast">
       <h3 className={styles.title}>24-hour forecast</h3>
+      <p className={styles.srOnly}>{trendSummary}</p>
       <div className={styles.forecastLayout} style={layoutStyle}>
         <div className={styles.graph} aria-hidden="true">
           <ResponsiveContainer width="100%" height="100%">
@@ -68,9 +81,9 @@ export function ForecastBlock({ forecast }: ForecastBlockProps) {
               <Line
                 type="monotone"
                 dataKey="temp"
-                stroke={ACCENT_COLD}
+                stroke="var(--color-accent-cold)"
                 strokeWidth={2}
-                dot={{ fill: ACCENT_COLD, r: 3, strokeWidth: 0 }}
+                dot={{ fill: 'var(--color-accent-cold)', r: 3, strokeWidth: 0 }}
                 activeDot={false}
                 isAnimationActive={false}
               />
@@ -87,13 +100,12 @@ export function ForecastBlock({ forecast }: ForecastBlockProps) {
               >
                 {formatTime(item.dt)}
               </time>
-            <img
-              className={styles.icon}
-              src={`https://openweathermap.org/img/wn/${item.icon}@2x.png`}
-              alt=""
-              width={36}
-              height={36}
-            />
+              <WeatherIcon
+                className={styles.icon}
+                icon={item.icon}
+                width={36}
+                height={36}
+              />
               <span className={styles.temp}>
                 {formatTemperature(item.temp)}
               </span>

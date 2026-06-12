@@ -1,5 +1,6 @@
 import type { CurrentWeather } from '@/entities/weather/types'
 import { ToggleFavoriteButton } from '@/features/toggle-favorite'
+import { WeatherIcon } from '@/shared/ui/WeatherIcon/WeatherIcon'
 import styles from './WeatherCard.module.css'
 import { useCountUp } from './useCountUp'
 
@@ -35,10 +36,9 @@ export function WeatherCard({ weather }: WeatherCardProps) {
       </div>
 
       <div className={styles.main}>
-        <img
+        <WeatherIcon
           className={styles.icon}
-          src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
-          alt=""
+          icon={weather.icon}
           width={64}
           height={64}
         />
@@ -54,18 +54,18 @@ export function WeatherCard({ weather }: WeatherCardProps) {
 
       <dl className={styles.stats}>
         <div className={styles.stat}>
-          <dd className={styles.statValue}>{weather.humidity}%</dd>
           <dt className={styles.statLabel}>Humidity</dt>
+          <dd className={styles.statValue}>{weather.humidity}%</dd>
         </div>
         <div className={styles.stat}>
-          <dd className={styles.statValue}>{weather.windSpeed} m/s</dd>
           <dt className={styles.statLabel}>Wind</dt>
+          <dd className={styles.statValue}>{weather.windSpeed} m/s</dd>
         </div>
         <div className={styles.stat}>
+          <dt className={styles.statLabel}>Feels like</dt>
           <dd className={styles.statValue}>
             {Math.round(weather.feelsLike)}°
           </dd>
-          <dt className={styles.statLabel}>Feels like</dt>
         </div>
       </dl>
     </article>

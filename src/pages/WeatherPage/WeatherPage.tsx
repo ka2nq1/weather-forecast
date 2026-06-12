@@ -9,14 +9,20 @@ import { SearchCity } from '@/features/search-city'
 import { Spinner } from '@/shared/ui/Spinner/Spinner'
 import { DailyForecastBlock } from '@/widgets/daily-forecast-block'
 import { FavoritesPanel } from '@/widgets/favorites-panel'
-import { ForecastBlock } from '@/widgets/forecast-block'
 import { WeatherCard } from '@/widgets/weather-card'
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import styles from './WeatherPage.module.css'
+
+const ForecastBlock = lazy(() =>
+  import('@/widgets/forecast-block').then((module) => ({
+    default: module.ForecastBlock,
+  })),
+)
 
 export function WeatherPage() {
   const [activeCity, setActiveCity] = useState('')
-  const hasActiveCity = !!activeCity.trim()
+  const normalizedCity = activeCity.trim()
+  const hasActiveCity = normalizedCity.length > 0
 
   const {
     data: weather,
@@ -32,27 +38,18 @@ export function WeatherPage() {
     error: forecastError,
   } = useForecast(activeCity)
 
-  const {
-    data: dailyForecast,
-    isPending: isDailyForecastPending,
-    isError: isDailyForecastError,
-    error: dailyForecastError,
-  } = useDailyForecast(activeCity)
+  const { data: dailyForecast } = useDailyForecast(activeCity)
 
-  const isPending =
-    hasActiveCity &&
-    (isWeatherPending || isForecastPending || isDailyForecastPending)
-  const isError =
-    hasActiveCity && (isWeatherError || isForecastError || isDailyForecastError)
-  const error = weatherError ?? forecastError ?? dailyForecastError
-  const isCityNotFound = error instanceof CityNotFoundError
-  const isInvalidApiKey = error instanceof InvalidApiKeyError
-  const isSuccess = hasActiveCity && weather && forecast && dailyForecast
+  const isCityNotFound = weatherError instanceof CityNotFoundError
+  const isInvalidApiKey = weatherError instanceof InvalidApiKeyError
+  const showWeatherCard = hasActiveCity && weather && !isWeatherPending
+  const showForecastSection =
+    showWeatherCard && (isForecastPending || isForecastError || !!forecast)
 
-  const renderErrorState = () => {
+  const renderWeatherError = () => {
     if (isCityNotFound) {
       return (
-        <p className={styles.errorState} role="alert">
+        <p id="weather-error" className={styles.errorState} role="alert">
           City not found. Check the spelling and try again.
         </p>
       )
@@ -60,7 +57,7 @@ export function WeatherPage() {
 
     if (isInvalidApiKey) {
       return (
-        <p className={styles.errorState} role="alert">
+        <p id="weather-error" className={styles.errorState} role="alert">
           Invalid API key. Copy <code>.env.example</code> to <code>.env</code>{' '}
           and set <code>VITE_WEATHER_API_KEY</code>. Get a free key at{' '}
           <a
@@ -77,7 +74,7 @@ export function WeatherPage() {
     }
 
     return (
-      <p className={styles.errorState} role="alert">
+      <p id="weather-error" className={styles.errorState} role="alert">
         Could not load weather. Check your connection.
       </p>
     )
@@ -86,52 +83,104 @@ export function WeatherPage() {
   const renderCardArea = () => {
     if (!hasActiveCity) {
       return (
-        <p className={styles.emptyState}>
-          Enter a city to read the atmosphere.
-        </p>
+        <p className={styles.emptyState}>Enter a city to view the weather.</p>
       )
     }
 
-    if (isPending) {
+    if (isWeatherPending) {
       return <Spinner size="md" />
     }
 
-    if (isError) {
-      return renderErrorState()
+    if (isWeatherError) {
+      return renderWeatherError()
     }
 
-    if (isSuccess) {
+    if (weather) {
       return <WeatherCard weather={weather} />
     }
 
     return null
   }
 
+  const renderForecastSection = () => {
+    if (!showForecastSection) {
+      return null
+    }
+
+    if (isForecastPending) {
+      return (
+        <div className={styles.forecastLoading}>
+          <Spinner size="md" />
+        </div>
+      )
+    }
+
+    if (isForecastError) {
+      const isForecastCityNotFound = forecastError instanceof CityNotFoundError
+
+      return (
+        <p className={styles.forecastError} role="alert">
+          {isForecastCityNotFound
+            ? 'Forecast unavailable for this city.'
+            : 'Could not load forecast. Check your connection.'}
+        </p>
+      )
+    }
+
+    if (!forecast || !dailyForecast) {
+      return null
+    }
+
+    return (
+      <>
+        <Suspense
+          fallback={
+            <div className={styles.forecastLoading}>
+              <Spinner size="md" />
+            </div>
+          }
+        >
+          <ForecastBlock forecast={forecast} />
+        </Suspense>
+        <DailyForecastBlock
+          className={styles.dailyWeatherBlock}
+          forecast={dailyForecast}
+        />
+      </>
+    )
+  }
+
   return (
     <div className={styles.page}>
       <FavoritesPanel activeCity={activeCity} onCitySelect={setActiveCity} />
 
-      <div
-        className={[styles.main, isSuccess && styles.mainWithForecasts]
-          .filter(Boolean)
-          .join(' ')}
-      >
-        <SearchCity onCityChange={setActiveCity} />
+      <div className={styles.main}>
+        <SearchCity
+          city={activeCity}
+          onCityChange={setActiveCity}
+          isLoading={hasActiveCity && isWeatherPending}
+          isInvalid={isWeatherError}
+          errorId={isWeatherError ? 'weather-error' : undefined}
+        />
 
         <div
-          className={styles.cardArea}
-          aria-live="polite"
-          aria-busy={isPending}
+          className={[
+            styles.weatherScroll,
+            showForecastSection && styles.weatherScrollWithForecasts,
+          ]
+            .filter(Boolean)
+            .join(' ')}
         >
-          <div className={styles.cardSlot}>{renderCardArea()}</div>
-        </div>
-
-        {isSuccess && (
-          <div className={styles.forecastStack}>
-            <ForecastBlock forecast={forecast} />
-            <DailyForecastBlock forecast={dailyForecast} />
+          <div
+            className={styles.cardArea}
+            aria-live="polite"
+            aria-busy={hasActiveCity && isWeatherPending}
+          >
+            <div className={styles.cardSlot}>{renderCardArea()}</div>
           </div>
-        )}
+
+          {showForecastSection && renderForecastSection()}
+        </div>
       </div>
     </div>
   )

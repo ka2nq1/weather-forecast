@@ -7,6 +7,8 @@ type InputProps = {
   onChange: (event: ChangeEvent<HTMLInputElement>) => void
   placeholder?: string
   isLoading?: boolean
+  isInvalid?: boolean
+  describedBy?: string
   id?: string
   className?: string
 }
@@ -16,6 +18,8 @@ export function Input({
   onChange,
   placeholder,
   isLoading = false,
+  isInvalid = false,
+  describedBy,
   id,
   className,
 }: InputProps) {
@@ -29,6 +33,8 @@ export function Input({
         onChange={onChange}
         placeholder={placeholder}
         aria-busy={isLoading}
+        aria-invalid={isInvalid || undefined}
+        aria-describedby={describedBy}
       />
       {isLoading && (
         <span className={styles.spinnerSlot}>

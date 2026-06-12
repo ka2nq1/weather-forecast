@@ -3,7 +3,6 @@
   border: 2px solid var(--color-border);
   border-top-color: var(--color-accent-cold);
   border-radius: 50%;
-  animation: spin 0.7s linear infinite;
 }
 
 .sm {
@@ -17,6 +16,10 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  .spinner {
+    animation: spin 0.7s linear infinite;
+  }
+
   @keyframes spin {
     to {
       transform: rotate(360deg);
