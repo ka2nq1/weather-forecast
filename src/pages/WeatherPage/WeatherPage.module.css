@@ -1,24 +1,66 @@
 .page {
   display: grid;
   grid-template-columns: 240px 1fr;
-  gap: var(--spacing-lg);
-  min-height: 100vh;
-  padding: var(--spacing-lg);
+  grid-template-rows: 1fr;
+  gap: var(--space-6);
+  height: 100dvh;
+  max-height: 100dvh;
+  padding: var(--space-6);
+  overflow: hidden;
+}
+
+.page > aside {
+  min-height: 0;
+  height: 100%;
 }
 
 .main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-4);
   min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mainWithForecasts {
+  grid-template-rows: auto auto minmax(0, 1fr);
 }
 
 .cardArea {
   display: flex;
-  flex: 1;
   align-items: center;
   justify-content: center;
-  min-height: 280px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mainWithForecasts .cardArea {
+  align-items: flex-start;
+  max-height: min(280px, 34vh);
+}
+
+.cardSlot {
+  display: flex;
+  width: 100%;
+  max-height: 100%;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.cardSlot > article {
+  width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.forecastStack {
+  display: grid;
+  grid-template-rows: minmax(168px, 1.15fr) minmax(140px, 1fr);
+  gap: var(--space-4);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .emptyState {
@@ -29,7 +71,7 @@
 }
 
 .errorState {
-  max-width: 360px;
+  max-width: 400px;
   font-family: var(--font-ui);
   font-size: 0.875rem;
   line-height: 1.5;
@@ -37,8 +79,64 @@
   color: var(--color-accent-warm);
 }
 
+.errorState code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-text-primary);
+}
+
+.errorLink {
+  color: var(--color-accent-cold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 150ms ease;
+}
+
+.errorLink:hover {
+  color: var(--color-text-primary);
+}
+
+.errorLink:focus-visible {
+  outline: 1px solid var(--color-accent-cold);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 @media (max-width: 768px) {
   .page {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    gap: var(--space-4);
+    height: auto;
+    max-height: none;
+    min-height: 100dvh;
+    padding: var(--space-4);
+    overflow-y: auto;
+  }
+
+  .page > aside {
+    height: auto;
+  }
+
+  .main {
+    height: auto;
+    grid-template-rows: auto auto auto;
+    overflow: visible;
+  }
+
+  .cardArea {
+    max-height: none;
+  }
+
+  .forecastStack {
+    grid-template-rows: auto auto;
+    min-height: auto;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: var(--space-3);
   }
 }

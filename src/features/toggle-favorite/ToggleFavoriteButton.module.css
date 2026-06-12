@@ -2,14 +2,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-xs);
+  padding: var(--space-1);
   font-size: 1.25rem;
   line-height: 1;
   color: var(--color-text-muted);
   background: none;
   border: none;
   border-radius: 2px;
-  transition: color 0.15s ease;
+  transition: color 150ms ease;
 }
 
 .button:hover {

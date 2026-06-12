@@ -23,6 +23,8 @@ export interface ForecastListItemResponse {
   dt: number
   main: {
     temp: number
+    temp_min: number
+    temp_max: number
   }
   weather: WeatherCondition[]
 }
@@ -32,7 +34,7 @@ export interface ForecastResponse {
 }
 
 export interface WeatherApiError {
-  cod: number
+  cod: number | string
   message: string
 }
 
@@ -52,4 +54,18 @@ export interface ForecastItem {
   temp: number
   description: string
   icon: string
+}
+
+export interface DailyForecastItem {
+  dt: number
+  label: string
+  minTemp: number
+  maxTemp: number
+  description: string
+  icon: string
+}
+
+export interface ForecastBundle {
+  hourly: ForecastItem[]
+  daily: DailyForecastItem[]
 }

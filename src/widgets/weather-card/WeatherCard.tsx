@@ -1,6 +1,7 @@
 import type { CurrentWeather } from '@/entities/weather/types'
 import { ToggleFavoriteButton } from '@/features/toggle-favorite'
 import styles from './WeatherCard.module.css'
+import { useCountUp } from './useCountUp'
 
 type WeatherCardProps = {
   weather: CurrentWeather
@@ -18,18 +19,14 @@ function getTemperatureColor(temp: number): string {
   return 'var(--color-text-primary)'
 }
 
-function formatTemperature(temp: number): string {
-  return `${Math.round(temp)}°`
-}
-
 export function WeatherCard({ weather }: WeatherCardProps) {
-  const temperature = Math.round(weather.temp)
+  const animatedTemp = useCountUp(weather.temp, 300)
   const temperatureColor = getTemperatureColor(weather.temp)
 
   return (
     <article className={styles.card}>
       <span className={styles.watermark} aria-hidden="true">
-        {temperature}
+        {animatedTemp}
       </span>
 
       <div className={styles.header}>
@@ -42,14 +39,14 @@ export function WeatherCard({ weather }: WeatherCardProps) {
           className={styles.icon}
           src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
           alt=""
-          width={80}
-          height={80}
+          width={64}
+          height={64}
         />
         <p
           className={styles.temperature}
           style={{ color: temperatureColor }}
         >
-          {formatTemperature(weather.temp)}
+          {animatedTemp}°
         </p>
       </div>
 
@@ -66,7 +63,7 @@ export function WeatherCard({ weather }: WeatherCardProps) {
         </div>
         <div className={styles.stat}>
           <dd className={styles.statValue}>
-            {formatTemperature(weather.feelsLike)}
+            {Math.round(weather.feelsLike)}°
           </dd>
           <dt className={styles.statLabel}>Feels like</dt>
         </div>

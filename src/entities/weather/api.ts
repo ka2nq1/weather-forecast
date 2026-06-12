@@ -4,6 +4,8 @@ import { CityNotFoundError, InvalidApiKeyError } from './errors'
 import type {
   CurrentWeather,
   CurrentWeatherResponse,
+  DailyForecastItem,
+  ForecastBundle,
   ForecastItem,
   ForecastListItemResponse,
   ForecastResponse,
@@ -11,6 +13,7 @@ import type {
 } from './types'
 
 const FORECAST_HOURS = 8
+const DAILY_FORECAST_DAYS = 5
 
 function mapCurrentWeather(data: CurrentWeatherResponse): CurrentWeather {
   const condition = data.weather[0]
@@ -38,6 +41,76 @@ function mapForecastItem(item: ForecastListItemResponse): ForecastItem {
   }
 }
 
+function formatDayLabel(timestamp: number): string {
+  const date = new Date(timestamp * 1000)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const forecastDay = new Date(date)
+  forecastDay.setHours(0, 0, 0, 0)
+
+  const dayOffset = Math.round(
+    (forecastDay.getTime() - today.getTime()) / 86_400_000,
+  )
+
+  if (dayOffset === 0) {
+    return 'Today'
+  }
+
+  if (dayOffset === 1) {
+    return 'Tomorrow'
+  }
+
+  return date.toLocaleDateString('en-GB', { weekday: 'short' })
+}
+
+function pickRepresentativeItem(
+  items: ForecastListItemResponse[],
+): ForecastListItemResponse {
+  const middayItem = items.find((item) => {
+    const hour = new Date(item.dt * 1000).getHours()
+    return hour >= 12 && hour <= 15
+  })
+
+  return middayItem ?? items[Math.floor(items.length / 2)] ?? items[0]
+}
+
+function aggregateDailyForecast(
+  list: ForecastListItemResponse[],
+): DailyForecastItem[] {
+  const itemsByDay = new Map<string, ForecastListItemResponse[]>()
+
+  for (const item of list) {
+    const dateKey = new Date(item.dt * 1000).toISOString().slice(0, 10)
+    const dayItems = itemsByDay.get(dateKey) ?? []
+    dayItems.push(item)
+    itemsByDay.set(dateKey, dayItems)
+  }
+
+  return Array.from(itemsByDay.values())
+    .slice(0, DAILY_FORECAST_DAYS)
+    .map((dayItems) => {
+      const representative = pickRepresentativeItem(dayItems)
+      const condition = representative.weather[0]
+
+      return {
+        dt: representative.dt,
+        label: formatDayLabel(representative.dt),
+        minTemp: Math.min(...dayItems.map((item) => item.main.temp_min)),
+        maxTemp: Math.max(...dayItems.map((item) => item.main.temp_max)),
+        description: condition?.description ?? '',
+        icon: condition?.icon ?? '',
+      }
+    })
+}
+
+function mapForecastBundle(data: ForecastResponse): ForecastBundle {
+  return {
+    hourly: data.list.slice(0, FORECAST_HOURS).map(mapForecastItem),
+    daily: aggregateDailyForecast(data.list),
+  }
+}
+
 function toGenericError(error: unknown, fallbackMessage: string): Error {
   if (isAxiosError<WeatherApiError>(error)) {
     const message = error.response?.data?.message ?? error.message
@@ -51,13 +124,26 @@ function toGenericError(error: unknown, fallbackMessage: string): Error {
   return new Error(fallbackMessage)
 }
 
+function isNotFoundError(error: unknown): boolean {
+  if (!isAxiosError<WeatherApiError>(error)) {
+    return false
+  }
+
+  if (error.response?.status === 404) {
+    return true
+  }
+
+  const cod = error.response?.data?.cod
+  return cod === 404 || cod === '404'
+}
+
 function handleApiError(error: unknown, city: string, fallbackMessage: string): never {
   if (isAxiosError(error)) {
     if (error.response?.status === 401) {
       throw new InvalidApiKeyError()
     }
 
-    if (error.response?.status === 404) {
+    if (isNotFoundError(error)) {
       throw new CityNotFoundError(city)
     }
   }
@@ -77,13 +163,13 @@ export async function getCurrentWeather(city: string): Promise<CurrentWeather> {
   }
 }
 
-export async function getForecast(city: string): Promise<ForecastItem[]> {
+export async function getForecastBundle(city: string): Promise<ForecastBundle> {
   try {
     const { data } = await httpClient.get<ForecastResponse>('/forecast', {
       params: { q: city },
     })
 
-    return data.list.slice(0, FORECAST_HOURS).map(mapForecastItem)
+    return mapForecastBundle(data)
   } catch (error) {
     handleApiError(error, city, 'Failed to fetch forecast')
   }

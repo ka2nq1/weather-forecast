@@ -1,18 +1,23 @@
 import type { ForecastItem } from '@/entities/weather/types'
+import type { CSSProperties } from 'react'
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import styles from './ForecastBlock.module.css'
 
 type ForecastBlockProps = {
   forecast: ForecastItem[]
 }
 
-const GRAPH_HEIGHT = 60
-const GRAPH_WIDTH = 1000
-const GRAPH_PADDING = 8
-const DOT_RADIUS = 3
+const ACCENT_COLD = '#4fc3f7'
 
-type GraphPoint = {
+type ChartPoint = {
   x: number
-  y: number
+  temp: number
 }
 
 function formatTime(timestamp: number): string {
@@ -27,77 +32,74 @@ function formatTemperature(temp: number): string {
   return `${Math.round(temp)}°`
 }
 
-function buildGraphPoints(forecast: ForecastItem[]): GraphPoint[] {
-  const temps = forecast.map((item) => item.temp)
-  const min = Math.min(...temps)
-  const max = Math.max(...temps)
-  const range = max - min || 1
-  const usableHeight = GRAPH_HEIGHT - GRAPH_PADDING * 2
-
-  return forecast.map((item, index) => {
-    const x =
-      forecast.length === 1
-        ? GRAPH_WIDTH / 2
-        : (index / (forecast.length - 1)) * GRAPH_WIDTH
-
-    const y =
-      GRAPH_HEIGHT -
-      GRAPH_PADDING -
-      ((item.temp - min) / range) * usableHeight
-
-    return { x, y }
-  })
-}
-
-function buildPolylinePoints(points: GraphPoint[]): string {
-  return points.map((point) => `${point.x},${point.y}`).join(' ')
+function buildChartData(forecast: ForecastItem[]): ChartPoint[] {
+  return forecast.map((item, index) => ({
+    x: index + 0.5,
+    temp: Math.round(item.temp),
+  }))
 }
 
 export function ForecastBlock({ forecast }: ForecastBlockProps) {
-  const graphPoints = buildGraphPoints(forecast)
+  const chartData = buildChartData(forecast)
+  const columnCount = forecast.length
+
+  const layoutStyle = {
+    '--forecast-cols': columnCount,
+  } as CSSProperties
 
   return (
     <section className={styles.block} aria-label="24-hour forecast">
-      <div className={styles.graph}>
-        <svg
-          className={styles.graphSvg}
-          viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`}
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <polyline
-            className={styles.polyline}
-            fill="none"
-            points={buildPolylinePoints(graphPoints)}
-          />
-          {graphPoints.map((point, index) => (
-            <circle
-              key={forecast[index].dt}
-              className={styles.dot}
-              cx={point.x}
-              cy={point.y}
-              r={DOT_RADIUS}
-            />
-          ))}
-        </svg>
-      </div>
+      <h3 className={styles.title}>24-hour forecast</h3>
+      <div className={styles.forecastLayout} style={layoutStyle}>
+        <div className={styles.graph} aria-hidden="true">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={chartData}
+              margin={{ top: 8, right: 0, bottom: 0, left: 0 }}
+            >
+              <XAxis
+                type="number"
+                dataKey="x"
+                domain={[0, columnCount]}
+                allowDecimals={false}
+                hide
+              />
+              <YAxis hide domain={['dataMin - 1', 'dataMax + 1']} />
+              <Line
+                type="monotone"
+                dataKey="temp"
+                stroke={ACCENT_COLD}
+                strokeWidth={2}
+                dot={{ fill: ACCENT_COLD, r: 3, strokeWidth: 0 }}
+                activeDot={false}
+                isAnimationActive={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
 
-      <div className={styles.strip}>
-        {forecast.map((item) => (
-          <div key={item.dt} className={styles.item}>
-            <time className={styles.time} dateTime={new Date(item.dt * 1000).toISOString()}>
-              {formatTime(item.dt)}
-            </time>
+        <div className={styles.strip}>
+          {forecast.map((item) => (
+            <div key={item.dt} className={styles.item}>
+              <time
+                className={styles.time}
+                dateTime={new Date(item.dt * 1000).toISOString()}
+              >
+                {formatTime(item.dt)}
+              </time>
             <img
               className={styles.icon}
               src={`https://openweathermap.org/img/wn/${item.icon}@2x.png`}
               alt=""
-              width={40}
-              height={40}
+              width={36}
+              height={36}
             />
-            <span className={styles.temp}>{formatTemperature(item.temp)}</span>
-          </div>
-        ))}
+              <span className={styles.temp}>
+                {formatTemperature(item.temp)}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )

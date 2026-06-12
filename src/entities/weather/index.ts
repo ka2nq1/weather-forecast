@@ -1,4 +1,5 @@
 export * from './types'
 export * from './errors'
 export { useCurrentWeather } from './hooks/useCurrentWeather'
+export { useDailyForecast } from './hooks/useDailyForecast'
 export { useForecast } from './hooks/useForecast'
